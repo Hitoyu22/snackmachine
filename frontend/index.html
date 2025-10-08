@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Frontend - Snack Machine</title>
+    <!-- Bulma CSS via CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <style>
+      /* Simple helper styles */
+      .scrollable-cards {
+        max-height: 60vh;
+        overflow-y: auto;
+        padding-right: 0.5rem;
+      }
+      .status-pay-circle {
+        width: 128px;
+        height: 128px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(10,10,10,0.2);
+        z-index: 1000;
+      }
+      /* Image fill and crop behavior */
+      .card .card-image .image.is-4by3 { position: relative; }
+      .card .card-image .image.is-4by3 img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      /* Minimal Bulma color overrides */
+      :root {
+        --primary: #293241;
+        --secondary: #3D5A80;
+        --error: #EE6C4D;
+        --success: #E0FBFC;
+      }
+      /* Primary */
+      .button.is-primary, .tag.is-primary { background-color: var(--primary) !important; border-color: var(--primary) !important; color: #fff !important; }
+      .hero.is-primary .hero-body, .is-primary { background-color: var(--primary) !important; border-color: var(--primary) !important; color: #fff !important; }
+      /* Secondary mapped to Bulma info */
+      .button.is-info, .tag.is-info { background-color: var(--secondary) !important; border-color: var(--secondary) !important; color: #fff !important; }
+      .hero.is-info .hero-body, .is-info { background-color: var(--secondary) !important; border-color: var(--secondary) !important; color: #fff !important; }
+      /* Error / Warning */
+      .button.is-danger, .tag.is-danger,
+      .button.is-warning, .tag.is-warning { background-color: var(--error) !important; border-color: var(--error) !important; color: #fff !important; }
+      .hero.is-danger .hero-body, .is-danger,
+      .hero.is-warning .hero-body, .is-warning { background-color: var(--error) !important; border-color: var(--error) !important; color: #fff !important; }
+      /* Success */
+      .button.is-success, .tag.is-success { background-color: var(--success) !important; border-color: var(--success) !important; color: #0a0a0a !important; }
+      .hero.is-success .hero-body, .is-success { background-color: var(--success) !important; border-color: var(--success) !important; color: #0a0a0a !important; }
+      .card.is-disabled { opacity: 0.5; pointer-events: none; filter: grayscale(100%); }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
