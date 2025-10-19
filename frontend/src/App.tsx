@@ -1,118 +1,65 @@
 import React, {useEffect, useMemo, useState} from 'react'
 import {Snack} from "./Snack";
 import {service} from "./service";
+import {Cart} from "./Cart";
+import {Status} from "./status";
 
 function euro(n: number): string {
     return new Intl.NumberFormat(undefined, {style: 'currency', currency: 'EUR'}).format(n)
 }
 
 export default function App(): React.JSX.Element {
-    /*const snacks: Snack[] = useMemo(() => [
-        {
-            id: 1,
-            name: 'Chips',
-            description: 'Crispy salted potato chips.',
-            image: 'https://images.unsplash.com/photo-1641693148759-843d17ceac24?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-            price: 1.2,
-            available: false
-        },
-        {
-            id: 2,
-            name: 'Chocolate',
-            description: 'Delicious dark chocolate bar.',
-            image: 'https://images.unsplash.com/photo-1614088685112-0a760b71a3c8?q=80&w=3333&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-            price: 1.8,
-            available: true
-        },
-        {
-            id: 3,
-            name: 'Cookies',
-            description: 'Buttery chocolate chip cookies.',
-            image: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?q=80&w=2678&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-            price: 1.5,
-            available: true
-        },
-        {
-            id: 4,
-            name: 'Soda',
-            description: 'Refreshing sparkling soda.',
-            image: 'https://images.unsplash.com/photo-1579684971280-0783c9cc00bc?q=80&w=1335&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-            price: 1.0,
-            available: true
-        },
-        {
-            id: 5,
-            name: 'Gummies',
-            description: 'Fruity gummy bears.',
-            image: 'https://plus.unsplash.com/premium_photo-1669547518632-9e50db122033?q=80&w=3687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-            price: 1.1,
-            available: true
-        },
-        {
-            id: 6,
-            name: 'Nuts',
-            description: 'Roasted salty peanuts.',
-            image: 'https://images.unsplash.com/photo-1605024344839-e6e41aea6b23?q=80&w=2274&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-            price: 1.6,
-            available: true
-        },
-        {
-            id: 7,
-            name: 'Popcorn',
-            description: 'Light and fluffy popcorn.',
-            image: 'https://images.unsplash.com/photo-1512149177596-f817c7ef5d4c?q=80&w=1300&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-            price: 1.3,
-            available: true
-        },
-        {
-            id: 8,
-            name: 'Granola',
-            description: 'Healthy granola bar.',
-            image: 'https://images.unsplash.com/photo-1504708706948-13d6cbba4062?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-            price: 1.4,
-            available: true
-        },
-        {
-            id: 9,
-            name: 'Water',
-            description: 'Pure spring water.',
-            image: 'https://images.unsplash.com/photo-1595994195534-d5219f02f99f?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-            price: 0.9,
-            available: true
-        }
-    ], [])*/
-
     const [snacks, setSnacks] = useState<Snack[]>([]);
-
-    const [available] = useState<number>(10);
-    const [cart, setCart] = useState<Record<number, number>>({});
+    const [balance, setBalance] = useState<number>(0);
+    const [order, setOrder] = useState<Cart>({order: {}, amount: 0});
+    const [status, setStatus] = useState<Status>(Status.Nothing);
 
     useEffect(() => {
         service.fetchSnack().then(setSnacks);
+        service.balance().then(setBalance);
     }, []);
 
     const toPay = useMemo(() => {
-        return snacks.reduce((sum, s) => sum + (cart[s.id] ?? 0) * s.price, 0)
-    }, [cart, snacks])
+        return order.amount;
+    }, [order, snacks])
 
     const selectedLabels = useMemo(() => {
         return snacks
-            .filter(s => (cart[s.id] ?? 0) > 0)
-    }, [cart, snacks])
+            .filter(s => (order.order[s.name] ?? 0) > 0)
+    }, [order, snacks]);
+
+    const pay = async () => {
+        setStatus(Status.Pending);
+        const balance = await service.pay();
+        setOrder({order: {}, amount: 0});
+        setBalance(balance);
+        await pollStatus();
+    }
+
+    const resetStatus = async () => {
+        setStatus(Status.Nothing);
+    }
+    const pollStatus = async () => {
+        const status = await service.status();
+        console.log(status, status === Status.Done);
+        if (status === Status.Pending) {
+            setTimeout(pollStatus, 1000);
+            return;
+        }
+
+        if (status === Status.Done || status === Status.Failed) {
+            setStatus(status);
+            setTimeout(resetStatus, 1000);
+            return;
+        }
+    }
 
     function addSnack(snack: Snack) {
-        setCart(prev => ({...prev, [snack.id]: (prev[snack.id] ?? 0) + 1}))
+        service.order(snack.name).then(u => setOrder(u));
     }
 
     function removeSnack(snack: Snack) {
-        setCart(prev => {
-            const current = prev[snack.id] ?? 0
-            if (current <= 1) {
-                const {[snack.id]: _omit, ...rest} = prev
-                return rest
-            }
-            return {...prev, [snack.id]: current - 1}
-        })
+        service.remove(snack.name).then(u => setOrder(u));
     }
 
     return (
@@ -123,16 +70,18 @@ export default function App(): React.JSX.Element {
                     <div className="container is-flex is-flex-direction-row is-justify-content-space-between">
                         <div className="">
                             <p className="heading">Available</p>
-                            <p className="title is-2">{euro(available)}</p>
-                            { /* <button className="status-pay-circle button is-secondary is-large" onClick={refill}>Refill</button> */ }
+                            <p className="title is-2">{euro(balance)}</p>
+                            { /* <button className="status-pay-circle button is-secondary is-large" onClick={refill}>Refill</button> */}
                         </div>
                         <div className="tags">
                             {selectedLabels.length === 0 ? (
                                 <span className="tag is-light">No snacks selected</span>
                             ) : (
                                 selectedLabels.map(p => (<>
-                                    {cart[p.id] === 1 && (<span key={p.name} className="tag is-warning is-light">{p.name}</span>)}
-                                    {cart[p.id] > 1 && (<span key={p.name} className="tag is-warning is-light">{p.name} x {cart[p.id]}</span>)}
+                                        {order.order[p.name] === 1 && (
+                                            <span key={p.name} className="tag is-warning is-light">{p.name}</span>)}
+                                        {order.order[p.name] > 1 && (<span key={p.name}
+                                                                           className="tag is-warning is-light">{p.name} x {order.order[p.name]}</span>)}
                                     </>
                                 ))
                             )}
@@ -165,9 +114,12 @@ export default function App(): React.JSX.Element {
                                             {snack.description}
                                         </div>
                                         <div className="buttons mt-3">
-                                            <button className="button is-primary" disabled={!snack.available} onClick={() => addSnack(snack)}>Add</button>
-                                            {(cart[snack.id] ?? 0) > 0 && (
-                                                <button className="button is-danger is-light" onClick={() => removeSnack(snack)}>Remove</button>
+                                            <button className="button is-primary" disabled={!snack.available}
+                                                    onClick={() => addSnack(snack)}>Add
+                                            </button>
+                                            {(order.order[snack.name] ?? 0) > 0 && (
+                                                <button className="button is-danger is-light"
+                                                        onClick={() => removeSnack(snack)}>Remove</button>
                                             )}
                                         </div>
                                     </div>
@@ -179,9 +131,13 @@ export default function App(): React.JSX.Element {
             </div>
 
             <div className="container is-flex is-justify-content-center is-fullwidth mt-2">
-            <button type="button" aria-label="Pay" className="status-pay-circle button is-primary is-large">
-                Pay
-            </button>
+                <button id="pay" type="button" aria-label="Pay"
+                        disabled={status !== Status.Nothing || order.amount === 0}
+                        className={`status-pay-circle button is-primary is-large ${status === Status.Pending ? 'is-loading is-pending' : status === Status.Done ? 'is-loading is-success' : status === Status.Failed ? 'is-loading is-failed' : ''}`} onClick={pay}>
+                    {
+                        status === Status.Nothing ? 'Pay' : status === Status.Pending ? 'Wait...' : status === Status.Done ? 'Done' : 'Failed'
+                    }
+                </button>
             </div>
         </div>
     )

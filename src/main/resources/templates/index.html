@@ -57,8 +57,30 @@
       .button.is-success, .tag.is-success { background-color: var(--success) !important; border-color: var(--success) !important; color: #0a0a0a !important; }
       .hero.is-success .hero-body, .is-success { background-color: var(--success) !important; border-color: var(--success) !important; color: #0a0a0a !important; }
       .card.is-disabled { opacity: 0.5; pointer-events: none; filter: grayscale(100%); }
+
+
+      #pay.is-loading.failed::after {
+          border-color: transparent transparent #EE6C4DFF #EE6C4DFF !important;
+      }
+
+      #pay.is-loading.is-success::after {
+          border-color: transparent transparent #48C78E #48C78E !important;
+      }
+
+      #pay.is-loading.is-pending::after {
+          border-color: transparent transparent #66D1FF #66D1FF !important;
+      }
+
+      #pay.is-loading::after {
+          border-width: 4px !important;
+          left: calc(50% - (136px * .5)) !important;
+          top: calc(50% - (136px * .5)) !important;
+          position: absolute !important;
+          width: 136px !important;
+          height: 136px !important;
+      }
     </style>
-    <script type="module" crossorigin src="/assets/index-BGPOBw22.js"></script>
+    <script type="module" crossorigin src="/assets/index-csidbfQi.js"></script>
   </head>
   <body>
     <div id="root"></div>

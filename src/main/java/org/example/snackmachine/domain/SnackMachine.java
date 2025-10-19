@@ -36,4 +36,8 @@ public class SnackMachine {
     public Order currentOrder() {
         return currentOrder;
     }
+
+    public void remove(Snack.Name snack) {
+        currentOrder.remove(snack);
+    }
 }
