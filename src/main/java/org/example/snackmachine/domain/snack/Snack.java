@@ -18,42 +18,42 @@ public class Snack {
         this.url = url;
     }
 
-    Integer getId(){
+    public Integer getId(){
         return id;
     }
-    void setId(Integer id){
+    public void setId(Integer id){
         this.id = id;
     }
 
-    String getName(){
+    public String getName(){
         return name;
     }
-    void setName(String name){
+    public void setName(String name){
         this.name = name;
     }
 
-    Integer getPrice(){
+    public Integer getPrice(){
         return price;
     }
-    void setPrice(Integer price){
+    public void setPrice(Integer price){
         this.price = price;
     }
 
-    String getDescription(){
+    public String getDescription(){
         return description;
     }
-    void setDescription(){
+    public void setDescription(){
         this.description = description;
     }
 
-    Integer getQuantity(){
+    public Integer getQuantity(){
         return quantity;
     }
     void setQuantity(Integer quantity){
         this.quantity = quantity;
     }
 
-    boolean isAvailable(int needed){
+    public boolean isAvailable(int needed){
         return quantity - needed >= 0;
     }
 

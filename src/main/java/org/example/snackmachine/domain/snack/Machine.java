@@ -1,26 +1,30 @@
 package org.example.snackmachine.domain.snack;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public class Machine {
 
     List<Snack> snacks;
     List<SnackPack> order;
     Integer balance;
+    List<CompletedOrder> orderHistory;
+    private Status status;
 
     public Machine(List<Snack> snacks, List<SnackPack> order, Integer balance) {
         this.snacks = snacks;
         this.order = order;
         this.balance = balance;
+        this.orderHistory = new ArrayList<>();
+        this.status = Status.nothing;
     }
 
-    void getAllProduct(){
-        for (Snack snack : snacks) {
-            System.out.println(snack.name);
-        }
+    public List<Snack> getAllSnacks(){
+        return this.snacks;
     }
 
-    Snack findProduct(Integer id){
+    private Snack findProduct(Integer id){
         for (Snack snack : snacks) {
             if (Objects.equals(snack.id, id))
                 return snack;
@@ -28,9 +32,116 @@ public class Machine {
         throw new IllegalArgumentException("Le produit n'existe pas");
     }
 
-    void getCurrentOrder(){
-        for (SnackPack snackpack : order){
-            System.out.println(findProduct(snackpack.id).name);
+    private Optional<SnackPack> findSnackPackInOrder(Integer snackId) {
+        return order.stream().filter(sp -> sp.getId().equals(snackId)).findFirst();
+    }
+
+    public List<SnackPack> getCurrentOrder(){
+        return this.order;
+    }
+
+    public Integer getBalance() {
+        return balance;
+    }
+
+    public List<CompletedOrder> getOrderHistory() {
+        return orderHistory;
+    }
+
+    public Status getStatus() {
+        Status currentStatus = this.status;
+        if (currentStatus == Status.done || currentStatus == Status.failed) {
+            this.status = Status.nothing;
+        }
+        return currentStatus;
+    }
+
+    private int calculateOrderTotal() {
+        int total = 0;
+        for (SnackPack item : order) {
+            Snack snack = findProduct(item.getId());
+            total += snack.getPrice() * item.getQuantity();
+        }
+        return total;
+    }
+
+    private int calculateTotalItems() {
+        int totalItems = 0;
+        for (SnackPack item : order) {
+            totalItems += item.getQuantity();
+        }
+        return totalItems;
+    }
+
+    public void addToOrder(Integer snackId, Integer amount) {
+        Snack snack = findProduct(snackId);
+        if (!snack.isAvailable(amount)) {
+            throw new IllegalStateException("Snack non disponible en quantité suffisante.");
+        }
+
+        snack.decreaseQuantity(amount);
+
+        Optional<SnackPack> existingPack = findSnackPackInOrder(snackId);
+
+        try {
+            if (existingPack.isPresent()) {
+                existingPack.get().increaseQuantity(amount);
+            } else {
+                order.add(new SnackPack(snackId, amount));
+            }
+        } catch (IllegalArgumentException e) {
+            snack.increaseQuantity(amount);
+            throw e;
+        }
+    }
+
+    public void removeFromOrder(Integer snackId, Integer amount) {
+        Optional<SnackPack> existingPack = findSnackPackInOrder(snackId);
+
+        if (existingPack.isEmpty()) {
+            return;
+        }
+
+        SnackPack pack = existingPack.get();
+        Snack snack = findProduct(snackId);
+
+        int actualAmountToRemove = Math.min(amount, pack.getQuantity());
+
+        pack.quantity -= actualAmountToRemove;
+
+        snack.increaseQuantity(actualAmountToRemove);
+
+        if (pack.getQuantity() <= 0) {
+            order.remove(pack);
+        }
+    }
+
+    public void payOrder() {
+        this.status = Status.pending;
+        int totalCost = calculateOrderTotal();
+
+        if (totalCost > this.balance) {
+            this.status = Status.failed;
+            throw new IllegalStateException("Solde insuffisant");
+        }
+
+        if (totalCost == 0) {
+            this.status = Status.nothing;
+            return;
+        }
+
+        try {
+            this.balance -= totalCost;
+            int totalItems = calculateTotalItems();
+            long delay = 3000L + (totalItems * 1000L);
+            Thread.sleep(delay);
+
+            this.orderHistory.add(new CompletedOrder(this.order, totalCost));
+            this.order = new ArrayList<>();
+            this.status = Status.done;
+        } catch (InterruptedException e) {
+            this.status = Status.failed;
+            Thread.currentThread().interrupt();
         }
     }
 
