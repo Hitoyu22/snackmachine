@@ -19,12 +19,12 @@ La machine est composée de :
 - le solde du compte
 
 On peut demander à la machine de :
-- lister tous les snacks
-- Fournir la commande en cours
+- lister tous les snacks ✅
+- Fournir la commande en cours  ✅
 - Payer la commande
 - Fournir le solde du compte
-- Ajouter un snack à la commande
-- Retirer un snack de la commande
+- Ajouter un snack à la commande ✅
+- Retirer un snack de la commande ✅
 
 - Quand l'utilisateur paye la commande, la machine doit retirer le montant au solde du compte.
 - Si le montant de la commande est supérieure au solde, une erreur est remontée indiquant que le solde est insuffisant.
