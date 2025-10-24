@@ -20,17 +20,17 @@ public class Machine {
         }
     }
 
-    String findProduct(Integer id){
+    Snack findProduct(Integer id){
         for (Snack snack : snacks) {
             if (Objects.equals(snack.id, id))
-                return snack.name;
+                return snack;
         }
         throw new IllegalArgumentException("Le produit n'existe pas");
     }
 
     void getCurrentOrder(){
         for (SnackPack snackpack : order){
-            System.out.println(findProduct(snackpack.id));
+            System.out.println(findProduct(snackpack.id).name);
         }
     }
 }
