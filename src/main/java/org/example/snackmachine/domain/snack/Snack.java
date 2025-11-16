@@ -42,7 +42,7 @@ public class Snack {
     public String getDescription(){
         return description;
     }
-    public void setDescription(){
+    public void setDescription(String description){
         this.description = description;
     }
 
@@ -53,15 +53,23 @@ public class Snack {
         this.quantity = quantity;
     }
 
+    public String getImageURL() {
+        return url;
+    }
+
+    public boolean isAvailable() {
+        return quantity > 0;
+    }
+
     public boolean isAvailable(int needed){
-        return quantity - needed >= 0;
+        return quantity - needed < 0;
     }
 
     void decreaseQuantity(Integer amount) {
         if (amount <= 0){
             throw new IllegalArgumentException("La quantité doit être positive.");
         }
-        if (!isAvailable(amount)){
+        if (isAvailable(amount)){
             throw new IllegalStateException("Stock insuffisant");
         }
         this.quantity = this.quantity - amount;

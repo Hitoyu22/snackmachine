@@ -17,16 +17,24 @@ public class Machine {
         this.order = order;
         this.balance = balance;
         this.orderHistory = new ArrayList<>();
-        this.status = Status.nothing;
+        this.status = Status.Nothing;
     }
 
     public List<Snack> getAllSnacks(){
         return this.snacks;
     }
 
-    private Snack findProduct(Integer id){
+    public Snack findSnackById(Integer id){
         for (Snack snack : snacks) {
             if (Objects.equals(snack.id, id))
+                return snack;
+        }
+        throw new IllegalArgumentException("Le produit n'existe pas");
+    }
+
+    public Snack findSnackByName(String name) {
+        for (Snack snack : snacks) {
+            if (Objects.equals(snack.getName(), name))
                 return snack;
         }
         throw new IllegalArgumentException("Le produit n'existe pas");
@@ -50,16 +58,16 @@ public class Machine {
 
     public Status getStatus() {
         Status currentStatus = this.status;
-        if (currentStatus == Status.done || currentStatus == Status.failed) {
-            this.status = Status.nothing;
+        if (currentStatus == Status.Done || currentStatus == Status.Failed) {
+            this.status = Status.Nothing;
         }
         return currentStatus;
     }
 
-    private int calculateOrderTotal() {
+    public int calculateOrderTotal() {
         int total = 0;
         for (SnackPack item : order) {
-            Snack snack = findProduct(item.getId());
+            Snack snack = findSnackById(item.getId());
             total += snack.getPrice() * item.getQuantity();
         }
         return total;
@@ -74,8 +82,8 @@ public class Machine {
     }
 
     public void addToOrder(Integer snackId, Integer amount) {
-        Snack snack = findProduct(snackId);
-        if (!snack.isAvailable(amount)) {
+        Snack snack = findSnackById(snackId);
+        if (snack.isAvailable(amount)) {
             throw new IllegalStateException("Snack non disponible en quantité suffisante.");
         }
 
@@ -103,11 +111,11 @@ public class Machine {
         }
 
         SnackPack pack = existingPack.get();
-        Snack snack = findProduct(snackId);
+        Snack snack = findSnackById(snackId);
 
         int actualAmountToRemove = Math.min(amount, pack.getQuantity());
 
-        pack.quantity -= actualAmountToRemove;
+        pack.decreaseQuantity(actualAmountToRemove);
 
         snack.increaseQuantity(actualAmountToRemove);
 
@@ -117,16 +125,16 @@ public class Machine {
     }
 
     public void payOrder() {
-        this.status = Status.pending;
+        this.status = Status.Pending;
         int totalCost = calculateOrderTotal();
 
         if (totalCost > this.balance) {
-            this.status = Status.failed;
+            this.status = Status.Failed;
             throw new IllegalStateException("Solde insuffisant");
         }
 
         if (totalCost == 0) {
-            this.status = Status.nothing;
+            this.status = Status.Nothing;
             return;
         }
 
@@ -138,37 +146,47 @@ public class Machine {
 
             this.orderHistory.add(new CompletedOrder(this.order, totalCost));
             this.order = new ArrayList<>();
-            this.status = Status.done;
+            this.status = Status.Done;
         } catch (InterruptedException e) {
-            this.status = Status.failed;
+            this.status = Status.Failed;
             Thread.currentThread().interrupt();
         }
     }
 
-    void addOrder(Integer id){
-        Snack snack = findProduct(id);
+    public void addOrder(Integer id){
+        Snack snack = findSnackById(id);
 
         if (snack.isAvailable(1)) {
-            for (SnackPack snackpack : order){
-                if (Objects.equals(snackpack.id, id)) {
-                    snackpack.increaseQuantity(1);
-                    snack.decreaseQuantity(1);
-                }
-            }
-        } else {
             throw new IllegalArgumentException("Le produit n'est pas disponible");
         }
-    }
 
-    void delOrder(Integer id){
-        Snack snack = findProduct(id);
-
-        for (SnackPack snackpack : order){
-            if (Objects.equals(snackpack.id, id)) {
-                snackpack.decreaseQuantity(1);
-                snack.increaseQuantity(1);
+        Optional<SnackPack> existingPack = findSnackPackInOrder(id);
+        try {
+            if (existingPack.isPresent()) {
+                existingPack.get().increaseQuantity(1);
+            } else {
+                order.add(new SnackPack(id, 1));
             }
+            snack.decreaseQuantity(1);
+        } catch (IllegalArgumentException e) {
+            snack.increaseQuantity(1);
+            throw e;
         }
     }
 
+    public void delOrder(Integer id){
+        Optional<SnackPack> existingPack = findSnackPackInOrder(id);
+
+        if (existingPack.isPresent()) {
+            SnackPack pack = existingPack.get();
+            Snack snack = findSnackById(id);
+
+            pack.decreaseQuantity(1);
+            snack.increaseQuantity(1);
+
+            if (pack.getQuantity() <= 0) {
+                order.remove(pack);
+            }
+        }
+    }
 }

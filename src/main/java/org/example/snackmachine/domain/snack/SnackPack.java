@@ -31,7 +31,7 @@ public class SnackPack {
         if (quantity + amount > 20){
             throw new IllegalArgumentException("La quantité ajoutée doit être inférieur à ce qu'il faut pour atteindre 20");
         }
-        quantity = quantity + 1;
+        quantity = quantity + amount;
     }
 
     public void decreaseQuantity(Integer amount) {
@@ -40,6 +40,7 @@ public class SnackPack {
         } else if (amount > this.quantity) {
             throw new IllegalArgumentException("Il n'est pas posssible de retiré plus que disponible dans le panier.");
         }
+        this.quantity = this.quantity - amount;
     }
 
 }
